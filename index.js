@@ -271,7 +271,7 @@ module.exports = new Class({
           if(err) reject(err)
 
           if(!Array.isArray(paths) || paths.length === 0){
-            resolve(_groups)
+            resolve(paths)
           }
           else{
             // let group = {}
@@ -354,7 +354,7 @@ module.exports = new Class({
         if(err) callback(err, Object.values(_groups))
 
         if(!Array.isArray(paths) || paths.length === 0){
-          callback(err, _groups)
+          callback(err, paths)
         }
         else{
           // let group = {}
