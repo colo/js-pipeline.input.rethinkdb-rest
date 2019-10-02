@@ -333,7 +333,8 @@ module.exports = new Class({
                 reject(err)
               }
               else{
-                resolve(Object.values(_groups))
+                let data = (Object.values(_groups).length > 0 ) ? Object.values(_groups) : undefined
+                resolve(data)
               }
             // process.exit(1)
             })
@@ -411,8 +412,8 @@ module.exports = new Class({
             })
           }, function (err) {
             debug('build_default_result ERR %o', err)
-
-            callback(err, Object.values(_groups))
+            let data = (Object.values(_groups).length > 0 ) ? Object.values(_groups) : undefined
+            callback(err, data)
           // process.exit(1)
           })
         }
