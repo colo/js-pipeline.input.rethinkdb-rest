@@ -1,1 +1,1 @@
-# node-rethinkdb-rest-process
+# js-pipeline.inputs.rethinkdb-rest
