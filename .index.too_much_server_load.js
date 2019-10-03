@@ -254,227 +254,224 @@ module.exports = new Class({
 
     return query
   },
-  /**
-  * creates more load on server, back to grouping
-  **/
-  // build_default_result: function(query, callback){
-  //   let _groups = {}
-  //   // let groups = []
-  //
-  //   let _path_query = query.distinct({index: 'path'}).coerceTo('array')
-  //
-  //   let self = this
-  //
-  //   if(!callback){
-  //     return new Promise(function(resolve, reject) {
-  //       _path_query.run(self.conn, {arrayLimit: 1000000}, function(err, paths){
-  //         debug('build_default_result PATHS %o %o', err, paths)
-  //
-  //         if(err) reject(err)
-  //
-  //         if(!Array.isArray(paths) || paths.length === 0){
-  //           resolve(paths)
-  //         }
-  //         else{
-  //           // let group = {}
-  //           async.eachOf(paths, function (path, index, _async_callback) {
-  //             if(!_groups[path]) _groups[path] = {}
-  //
-  //             _groups[path].path = path
-  //
-  //             //COUNT
-  //             self._build_default_result_count(query, path, function(err, resp){
-  //               if(err) _async_callback(err)
-  //
-  //               _groups[path].count = resp
-  //               debug('_build_default_result_count %o', _groups[path])
-  //
-  //               //HOSTS
-  //               self._build_default_result_hosts(query, path, function(err, resp){
-  //                 if(err) _async_callback(err)
-  //
-  //                 _groups[path].hosts = resp
-  //                 debug('_build_default_result_hosts %o', _groups[path])
-  //
-  //                 //TAGS
-  //                 self._build_default_result_tags(query, path, function(err, resp){
-  //                   if(err) _async_callback(err)
-  //
-  //                   _groups[path].tags = resp
-  //                   debug('_build_default_result_tags %o', _groups[path])
-  //
-  //                   //RANGE
-  //                   self._build_default_result_range(query, path, function(err, resp){
-  //                     if(err) _async_callback(err)
-  //
-  //                     _groups[path].range = resp
-  //                     debug('_build_default_result_range %o', _groups[path])
-  //
-  //                     //TYPES
-  //                     self._build_default_result_types(query, path, function(err, resp){
-  //                       if(err) _async_callback(err)
-  //
-  //                       _groups[path].types = resp
-  //                       debug('_build_default_result_types %o', _groups[path])
-  //
-  //                       // process.exit(1)
-  //                       // _groups[path].push(_groups[path])
-  //                       _async_callback()
-  //                     })
-  //
-  //                   })
-  //
-  //                 })
-  //
-  //               })
-  //
-  //             })
-  //           }, function (err) {
-  //             debug('build_default_result ERR %o', err)
-  //             if(err){
-  //               reject(err)
-  //             }
-  //             else{
-  //               let data = (Object.values(_groups).length > 0 ) ? Object.values(_groups) : []
-  //               resolve(data)
-  //             }
-  //           // process.exit(1)
-  //           })
-  //         }
-  //
-  //
-  //         // })
-  //         // process.exit(1)
-  //       })
-  //
-  //     })
-  //   }
-  //   else {
-  //     _path_query.run(this.conn, {arrayLimit: 1000000}, function(err, paths){
-  //       debug('build_default_result PATHS %o %o', err, paths)
-  //
-  //       if(err) callback(err, Object.values(_groups))
-  //
-  //       if(!Array.isArray(paths) || paths.length === 0){
-  //         callback(err, paths)
-  //       }
-  //       else{
-  //         // let group = {}
-  //         async.eachOf(paths, function (path, index, _async_callback) {
-  //           if(!_groups[path]) _groups[path] = {}
-  //
-  //           _groups[path].path = path
-  //
-  //           //COUNT
-  //           self._build_default_result_count(query, path, function(err, resp){
-  //             if(err) _async_callback(err)
-  //
-  //             _groups[path].count = resp
-  //             debug('_build_default_result_count %o', _groups[path])
-  //
-  //             //HOSTS
-  //             self._build_default_result_hosts(query, path, function(err, resp){
-  //               if(err) _async_callback(err)
-  //
-  //               _groups[path].hosts = resp
-  //               debug('_build_default_result_hosts %o', _groups[path])
-  //
-  //               //TAGS
-  //               self._build_default_result_tags(query, path, function(err, resp){
-  //                 if(err) _async_callback(err)
-  //
-  //                 _groups[path].tags = resp
-  //                 debug('_build_default_result_tags %o', _groups[path])
-  //
-  //                 //RANGE
-  //                 self._build_default_result_range(query, path, function(err, resp){
-  //                   if(err) _async_callback(err)
-  //
-  //                   _groups[path].range = resp
-  //                   debug('_build_default_result_range %o', _groups[path])
-  //
-  //                   //TYPES
-  //                   self._build_default_result_types(query, path, function(err, resp){
-  //                     if(err) _async_callback(err)
-  //
-  //                     _groups[path].types = resp
-  //                     debug('_build_default_result_types %o', _groups[path])
-  //
-  //                     // process.exit(1)
-  //                     // groups.push(group)
-  //                     _async_callback()
-  //                   })
-  //
-  //                 })
-  //
-  //               })
-  //
-  //             })
-  //
-  //           })
-  //         }, function (err) {
-  //           debug('build_default_result ERR %o %o', err, _groups)
-  //           // process.exit(1)
-  //           let data = (Object.values(_groups).length > 0 ) ? Object.values(_groups) : []
-  //           callback(err, data)
-  //         // process.exit(1)
-  //         })
-  //       }
-  //
-  //
-  //       // })
-  //       // process.exit(1)
-  //     })
-  //   }
-  //
-  //
-  //
-  // },
-  // _build_default_result_count: function(query, path, callback){
-  //   let _count_query = query.getAll(path, {index: 'path'}).count()
-  //   _count_query.run(this.conn, {arrayLimit: 1000000}, callback)
-  // },
-  // _build_default_result_hosts: function(query, path, callback){
-  //   let _hosts_query = query.getAll(path, {index: 'path'})('metadata')('host').distinct().coerceTo('array')
-  //   _hosts_query.run(this.conn, {arrayLimit: 1000000}, callback)
-  // },
-  // _build_default_result_tags: function(query, path, callback){
-  //   let _tags_query = query.getAll(path, {index: 'path'})('metadata')('tag').distinct().coerceTo('array')
-  //   _tags_query.run(this.conn, {arrayLimit: 1000000}, function(err, resp){
-  //     let tags = []
-  //     if(Array.isArray(resp)){
-  //       Array.each(resp, function(_tags){
-  //         tags.combine(_tags)
-  //       })
-  //
-  //     }
-  //
-  //     callback(err, tags)
-  //
-  //   })
-  // },
-  // _build_default_result_range: function(query, path, callback){
-  //   let range = []
-  //   let self = this
-  //   let _range_query_min = query.getAll(path, {index: 'path'})('metadata')('timestamp').min()
-  //   _range_query_min.run(this.conn, {arrayLimit: 1000000}, function(err, resp){
-  //     range[0] = resp
-  //
-  //     let _range_query_max = query.getAll(path, {index: 'path'})('metadata')('timestamp').max()
-  //     _range_query_max.run(self.conn, {arrayLimit: 1000000}, function(err, resp){
-  //       range[1] = resp
-  //       callback(err, range)
-  //     })
-  //
-  //
-  //   })
-  // },
-  // _build_default_result_types: function(query, path, callback){
-  //   let _types_query = query.getAll(path, {index: 'path'})('metadata')('type').distinct().coerceTo('array')
-  //   _types_query.run(this.conn, {arrayLimit: 1000000}, callback)
-  // },
-  // build_default_result_between: function(doc){
-  build_default_result: function(doc){
+
+  build_default_result: function(query, callback){
+    let _groups = {}
+    // let groups = []
+
+    let _path_query = query.distinct({index: 'path'}).coerceTo('array')
+
+    let self = this
+
+    if(!callback){
+      return new Promise(function(resolve, reject) {
+        _path_query.run(self.conn, {arrayLimit: 1000000}, function(err, paths){
+          debug('build_default_result PATHS %o %o', err, paths)
+
+          if(err) reject(err)
+
+          if(!Array.isArray(paths) || paths.length === 0){
+            resolve(paths)
+          }
+          else{
+            // let group = {}
+            async.eachOf(paths, function (path, index, _async_callback) {
+              if(!_groups[path]) _groups[path] = {}
+
+              _groups[path].path = path
+
+              //COUNT
+              self._build_default_result_count(query, path, function(err, resp){
+                if(err) _async_callback(err)
+
+                _groups[path].count = resp
+                debug('_build_default_result_count %o', _groups[path])
+
+                //HOSTS
+                self._build_default_result_hosts(query, path, function(err, resp){
+                  if(err) _async_callback(err)
+
+                  _groups[path].hosts = resp
+                  debug('_build_default_result_hosts %o', _groups[path])
+
+                  //TAGS
+                  self._build_default_result_tags(query, path, function(err, resp){
+                    if(err) _async_callback(err)
+
+                    _groups[path].tags = resp
+                    debug('_build_default_result_tags %o', _groups[path])
+
+                    //RANGE
+                    self._build_default_result_range(query, path, function(err, resp){
+                      if(err) _async_callback(err)
+
+                      _groups[path].range = resp
+                      debug('_build_default_result_range %o', _groups[path])
+
+                      //TYPES
+                      self._build_default_result_types(query, path, function(err, resp){
+                        if(err) _async_callback(err)
+
+                        _groups[path].types = resp
+                        debug('_build_default_result_types %o', _groups[path])
+
+                        // process.exit(1)
+                        // _groups[path].push(_groups[path])
+                        _async_callback()
+                      })
+
+                    })
+
+                  })
+
+                })
+
+              })
+            }, function (err) {
+              debug('build_default_result ERR %o', err)
+              if(err){
+                reject(err)
+              }
+              else{
+                let data = (Object.values(_groups).length > 0 ) ? Object.values(_groups) : []
+                resolve(data)
+              }
+            // process.exit(1)
+            })
+          }
+
+
+          // })
+          // process.exit(1)
+        })
+
+      })
+    }
+    else {
+      _path_query.run(this.conn, {arrayLimit: 1000000}, function(err, paths){
+        debug('build_default_result PATHS %o %o', err, paths)
+
+        if(err) callback(err, Object.values(_groups))
+
+        if(!Array.isArray(paths) || paths.length === 0){
+          callback(err, paths)
+        }
+        else{
+          // let group = {}
+          async.eachOf(paths, function (path, index, _async_callback) {
+            if(!_groups[path]) _groups[path] = {}
+
+            _groups[path].path = path
+
+            //COUNT
+            self._build_default_result_count(query, path, function(err, resp){
+              if(err) _async_callback(err)
+
+              _groups[path].count = resp
+              debug('_build_default_result_count %o', _groups[path])
+
+              //HOSTS
+              self._build_default_result_hosts(query, path, function(err, resp){
+                if(err) _async_callback(err)
+
+                _groups[path].hosts = resp
+                debug('_build_default_result_hosts %o', _groups[path])
+
+                //TAGS
+                self._build_default_result_tags(query, path, function(err, resp){
+                  if(err) _async_callback(err)
+
+                  _groups[path].tags = resp
+                  debug('_build_default_result_tags %o', _groups[path])
+
+                  //RANGE
+                  self._build_default_result_range(query, path, function(err, resp){
+                    if(err) _async_callback(err)
+
+                    _groups[path].range = resp
+                    debug('_build_default_result_range %o', _groups[path])
+
+                    //TYPES
+                    self._build_default_result_types(query, path, function(err, resp){
+                      if(err) _async_callback(err)
+
+                      _groups[path].types = resp
+                      debug('_build_default_result_types %o', _groups[path])
+
+                      // process.exit(1)
+                      // groups.push(group)
+                      _async_callback()
+                    })
+
+                  })
+
+                })
+
+              })
+
+            })
+          }, function (err) {
+            debug('build_default_result ERR %o %o', err, _groups)
+            // process.exit(1)
+            let data = (Object.values(_groups).length > 0 ) ? Object.values(_groups) : []
+            callback(err, data)
+          // process.exit(1)
+          })
+        }
+
+
+        // })
+        // process.exit(1)
+      })
+    }
+
+
+
+  },
+  _build_default_result_count: function(query, path, callback){
+    let _count_query = query.getAll(path, {index: 'path'}).count()
+    _count_query.run(this.conn, {arrayLimit: 1000000}, callback)
+  },
+  _build_default_result_hosts: function(query, path, callback){
+    let _hosts_query = query.getAll(path, {index: 'path'})('metadata')('host').distinct().coerceTo('array')
+    _hosts_query.run(this.conn, {arrayLimit: 1000000}, callback)
+  },
+  _build_default_result_tags: function(query, path, callback){
+    let _tags_query = query.getAll(path, {index: 'path'})('metadata')('tag').distinct().coerceTo('array')
+    _tags_query.run(this.conn, {arrayLimit: 1000000}, function(err, resp){
+      let tags = []
+      if(Array.isArray(resp)){
+        Array.each(resp, function(_tags){
+          tags.combine(_tags)
+        })
+
+      }
+
+      callback(err, tags)
+
+    })
+  },
+  _build_default_result_range: function(query, path, callback){
+    let range = []
+    let self = this
+    let _range_query_min = query.getAll(path, {index: 'path'})('metadata')('timestamp').min()
+    _range_query_min.run(this.conn, {arrayLimit: 1000000}, function(err, resp){
+      range[0] = resp
+
+      let _range_query_max = query.getAll(path, {index: 'path'})('metadata')('timestamp').max()
+      _range_query_max.run(self.conn, {arrayLimit: 1000000}, function(err, resp){
+        range[1] = resp
+        callback(err, range)
+      })
+
+
+    })
+  },
+  _build_default_result_types: function(query, path, callback){
+    let _types_query = query.getAll(path, {index: 'path'})('metadata')('type').distinct().coerceTo('array')
+    _types_query.run(this.conn, {arrayLimit: 1000000}, callback)
+  },
+  build_default_result_between: function(doc){
     let self = this
     return {
       path: doc('group'),
