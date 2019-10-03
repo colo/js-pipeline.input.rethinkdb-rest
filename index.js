@@ -591,7 +591,7 @@ module.exports = new Class({
 
     return r_query
   },
-  process_default: function(err, resp, params){
+  process_default: function(err, resp, params, error_on_doc){
     params = (params) ? Object.clone(params) : {}
     debug_internals('process_default', err, params)
 
@@ -623,8 +623,8 @@ module.exports = new Class({
         message: 'Not Found'
       }
 
-    if(Array.isArray(resp))
-      debug_internals('ARRAY RESP', resp)
+    // if(Array.isArray(resp))
+    //   debug_internals('ARRAY RESP', resp)
 
     // extras[type] = (Array.isArray(resp)) ? resp[0] : resp
     // let data = (Array.isArray(resp) && metadata.changes !== true) ? resp[0] : resp
@@ -636,6 +636,10 @@ module.exports = new Class({
 
     if(err){
       this.fireEvent(this.ON_DOC_ERROR, [err, {id: id, metadata : metadata}]);
+
+      if(error_on_doc)
+        this.fireEvent(this.ON_DOC, [{err, id: id, metadata : metadata}, Object.merge({input_type: this, app: null})]);
+
     }
     else{
 
