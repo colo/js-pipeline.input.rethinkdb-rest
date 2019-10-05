@@ -255,9 +255,114 @@ module.exports = new Class({
     return query
   },
   /**
+  * creates more load on server
+  **/
+  build_default_result_distinct: function(query, callback){
+    debug('build_default_result %o', query)
+
+    let _groups = {}
+    // let groups = []
+
+    let _path_query = query.distinct({index: 'path'})
+    // .coerceTo('array')
+
+    let self = this
+
+    if(!callback){
+      return new Promise(function(resolve, reject) {
+        _path_query.run(this.conn, {arrayLimit: 1000000}, function(err, paths){
+          if(err) reject(err)
+
+          paths.eachAsync(
+            function (path, rowFinished) {
+              if(!_groups[path]) _groups[path] = {}
+              _groups[path].path = path
+
+              self.r.expr([
+                query.getAll(path, {'index': 'path'}).count(),
+                query.getAll(path, {'index': 'path'})('metadata')('host').distinct(),
+                query.getAll(path, {'index': 'path'})('metadata')('tag').distinct(),
+                query.getAll(path, {'index': 'path'})('metadata')('type').distinct(),
+                query.getAll(path, {'index': 'path'})('metadata')('timestamp').min(),
+                query.getAll(path, {'index': 'path'})('metadata')('timestamp').max()
+              ]).run(self.conn, {arrayLimit: 1000000}, function(err, resp){
+                // debug('EXPR RESULT %o %o', err, resp)
+                _groups[path].tags = []
+                resp[2].each(function(item){_groups[path].tags.combine(item)})
+
+                _groups[path].count = resp[0]
+                _groups[path].hosts = resp[1]
+                _groups[path].types = resp[3]
+                _groups[path].range =[ resp[4],  resp[5] ]
+
+                rowFinished(err)
+              })
+            },
+            function (err) {
+              debug('build_default_result ERR %o', err)
+              if(err){
+                reject(err)
+              }
+              else{
+                let data = (Object.values(_groups).length > 0 ) ? Object.values(_groups) : []
+                resolve(data)
+              }
+
+            }
+          )
+
+
+
+        })
+      })
+    }
+    else{
+      _path_query.run(this.conn, {arrayLimit: 1000000}, function(err, paths){
+        if(err) callback(err, Object.values(_groups))
+
+        paths.eachAsync(
+          function (path, rowFinished) {
+            if(!_groups[path]) _groups[path] = {}
+            _groups[path].path = path
+
+            self.r.expr([
+              query.getAll(path, {'index': 'path'}).count(),
+              query.getAll(path, {'index': 'path'})('metadata')('host').distinct(),
+              query.getAll(path, {'index': 'path'})('metadata')('tag').distinct(),
+              query.getAll(path, {'index': 'path'})('metadata')('type').distinct(),
+              query.getAll(path, {'index': 'path'})('metadata')('timestamp').min(),
+              query.getAll(path, {'index': 'path'})('metadata')('timestamp').max()
+            ]).run(self.conn, {arrayLimit: 1000000}, function(err, resp){
+              // debug('EXPR RESULT %o %o', err, resp)
+              _groups[path].tags = []
+              resp[2].each(function(item){_groups[path].tags.combine(item)})
+
+              _groups[path].count = resp[0]
+              _groups[path].hosts = resp[1]
+              _groups[path].types = resp[3]
+              _groups[path].range =[ resp[4],  resp[5] ]
+
+              rowFinished(err)
+            })
+          },
+          function (err) {
+            debug('build_default_result ERR %o %o', err, _groups)
+            let data = (Object.values(_groups).length > 0 ) ? Object.values(_groups) : []
+            callback(err, data)
+          }
+        )
+
+
+
+      })
+
+
+    }
+  },
+  /**
   * creates more load on server, back to grouping
   **/
-  // build_default_result: function(query, callback){
+  // _build_default_result_distinct: function(query, callback){
   //   let _groups = {}
   //   // let groups = []
   //
