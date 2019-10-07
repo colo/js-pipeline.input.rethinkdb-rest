@@ -334,14 +334,15 @@ module.exports = new Class({
               query.getAll(path, {'index': 'path'})('metadata')('timestamp').max()
             ]).run(self.conn, {arrayLimit: 1000000}, function(err, resp){
               // debug('EXPR RESULT %o %o', err, resp)
-              _groups[path].tags = []
-              resp[2].each(function(item){_groups[path].tags.combine(item)})
+              if(resp && Array.isArray(resp)){
+                _groups[path].tags = []
+                resp[2].each(function(item){_groups[path].tags.combine(item)})
 
-              _groups[path].count = resp[0]
-              _groups[path].hosts = resp[1]
-              _groups[path].types = resp[3]
-              _groups[path].range =[ resp[4],  resp[5] ]
-
+                _groups[path].count = resp[0]
+                _groups[path].hosts = resp[1]
+                _groups[path].types = resp[3]
+                _groups[path].range =[ resp[4],  resp[5] ]
+              }
               rowFinished(err)
             })
           },
