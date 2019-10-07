@@ -257,46 +257,78 @@ module.exports = new Class({
   /**
   * creates more load on server
   **/
-  build_default_result_distinct: function(query, callback){
-    debug('build_default_result %o', query)
+  build_default_result_distinct: function(query, distinct, callback){
+    debug('build_default_result %o', query, distinct)
+    // process.exit(1)
 
     let _groups = {}
     // let groups = []
 
-    let _path_query = query.distinct({index: 'path'})
+    let _index_query = query.distinct(distinct)
     // .coerceTo('array')
 
     let self = this
 
+    let _indexes_async = function(_groups, index, distinct, rowFinished){
+      if(!_groups[index]) _groups[index] = {}
+      // _groups[index].index = index
+      _groups[index].index_type = distinct.index
+      _groups[index][distinct.index] = index
+
+      self.r.expr([
+        query.getAll(index, distinct).count(),
+        query.getAll(index, distinct)('metadata')('host').distinct(),
+        query.getAll(index, distinct)('metadata')('tag').distinct(),
+        query.getAll(index, distinct)('metadata')('type').distinct(),
+        query.getAll(index, distinct)('metadata')('timestamp').min(),
+        query.getAll(index, distinct)('metadata')('timestamp').max(),
+        query.getAll(index, distinct)('metadata')('path').distinct(),
+      ]).run(self.conn, {arrayLimit: 1000000}, function(err, resp){
+        // debug('EXPR RESULT %o %o', err, resp)
+        if(resp && Array.isArray(resp)){
+          _groups[index].tags = []
+          resp[2].each(function(item){_groups[index].tags.combine(item)})
+
+          _groups[index].count = resp[0]
+          _groups[index].hosts = resp[1]
+          _groups[index].types = resp[3]
+          _groups[index].range =[ resp[4],  resp[5] ]
+          _groups[index].paths = resp[6]
+        }
+        rowFinished(err)
+      })
+    }
+
     if(!callback){
       return new Promise(function(resolve, reject) {
-        _path_query.run(this.conn, {arrayLimit: 1000000}, function(err, paths){
+        _index_query.run(this.conn, {arrayLimit: 1000000}, function(err, indexes){
           if(err) reject(err)
 
-          paths.eachAsync(
-            function (path, rowFinished) {
-              if(!_groups[path]) _groups[path] = {}
-              _groups[path].path = path
-
-              self.r.expr([
-                query.getAll(path, {'index': 'path'}).count(),
-                query.getAll(path, {'index': 'path'})('metadata')('host').distinct(),
-                query.getAll(path, {'index': 'path'})('metadata')('tag').distinct(),
-                query.getAll(path, {'index': 'path'})('metadata')('type').distinct(),
-                query.getAll(path, {'index': 'path'})('metadata')('timestamp').min(),
-                query.getAll(path, {'index': 'path'})('metadata')('timestamp').max()
-              ]).run(self.conn, {arrayLimit: 1000000}, function(err, resp){
-                // debug('EXPR RESULT %o %o', err, resp)
-                _groups[path].tags = []
-                resp[2].each(function(item){_groups[path].tags.combine(item)})
-
-                _groups[path].count = resp[0]
-                _groups[path].hosts = resp[1]
-                _groups[path].types = resp[3]
-                _groups[path].range =[ resp[4],  resp[5] ]
-
-                rowFinished(err)
-              })
+          indexes.eachAsync(
+            function (index, rowFinished) {
+              _indexes_async(_groups, index, distinct, rowFinished)
+              // if(!_groups[index]) _groups[index] = {}
+              // _groups[index].index = index
+              //
+              // self.r.expr([
+              //   query.getAll(index, distinct).count(),
+              //   query.getAll(index, distinct)('metadata')('host').distinct(),
+              //   query.getAll(index, distinct)('metadata')('tag').distinct(),
+              //   query.getAll(index, distinct)('metadata')('type').distinct(),
+              //   query.getAll(index, distinct)('metadata')('timestamp').min(),
+              //   query.getAll(index, distinct)('metadata')('timestamp').max()
+              // ]).run(self.conn, {arrayLimit: 1000000}, function(err, resp){
+              //   // debug('EXPR RESULT %o %o', err, resp)
+              //   _groups[index].tags = []
+              //   resp[2].each(function(item){_groups[index].tags.combine(item)})
+              //
+              //   _groups[index].count = resp[0]
+              //   _groups[index].hosts = resp[1]
+              //   _groups[index].types = resp[3]
+              //   _groups[index].range =[ resp[4],  resp[5] ]
+              //
+              //   rowFinished(err)
+              // })
             },
             function (err) {
               debug('build_default_result ERR %o', err)
@@ -317,34 +349,39 @@ module.exports = new Class({
       })
     }
     else{
-      _path_query.run(this.conn, {arrayLimit: 1000000}, function(err, paths){
+      _index_query.run(this.conn, {arrayLimit: 1000000}, function(err, indexes){
         if(err) callback(err, Object.values(_groups))
 
-        paths.eachAsync(
-          function (path, rowFinished) {
-            if(!_groups[path]) _groups[path] = {}
-            _groups[path].path = path
+        indexes.eachAsync(
+          function (index, rowFinished) {
+            _indexes_async(_groups, index, distinct, rowFinished)
 
-            self.r.expr([
-              query.getAll(path, {'index': 'path'}).count(),
-              query.getAll(path, {'index': 'path'})('metadata')('host').distinct(),
-              query.getAll(path, {'index': 'path'})('metadata')('tag').distinct(),
-              query.getAll(path, {'index': 'path'})('metadata')('type').distinct(),
-              query.getAll(path, {'index': 'path'})('metadata')('timestamp').min(),
-              query.getAll(path, {'index': 'path'})('metadata')('timestamp').max()
-            ]).run(self.conn, {arrayLimit: 1000000}, function(err, resp){
-              // debug('EXPR RESULT %o %o', err, resp)
-              if(resp && Array.isArray(resp)){
-                _groups[path].tags = []
-                resp[2].each(function(item){_groups[path].tags.combine(item)})
-
-                _groups[path].count = resp[0]
-                _groups[path].hosts = resp[1]
-                _groups[path].types = resp[3]
-                _groups[path].range =[ resp[4],  resp[5] ]
-              }
-              rowFinished(err)
-            })
+            // if(!_groups[index]) _groups[index] = {}
+            // _groups[index].index = index
+            // _groups[index].index_type = distinct.index
+            //
+            // self.r.expr([
+            //   query.getAll(index, distinct).count(),
+            //   query.getAll(index, distinct)('metadata')('host').distinct(),
+            //   query.getAll(index, distinct)('metadata')('tag').distinct(),
+            //   query.getAll(index, distinct)('metadata')('type').distinct(),
+            //   query.getAll(index, distinct)('metadata')('timestamp').min(),
+            //   query.getAll(index, distinct)('metadata')('timestamp').max(),
+            //   query.getAll(index, distinct)('metadata')('path').distinct(),
+            // ]).run(self.conn, {arrayLimit: 1000000}, function(err, resp){
+            //   // debug('EXPR RESULT %o %o', err, resp)
+            //   if(resp && Array.isArray(resp)){
+            //     _groups[index].tags = []
+            //     resp[2].each(function(item){_groups[index].tags.combine(item)})
+            //
+            //     _groups[index].count = resp[0]
+            //     _groups[index].hosts = resp[1]
+            //     _groups[index].types = resp[3]
+            //     _groups[index].range =[ resp[4],  resp[5] ]
+            //     _groups[index].paths = resp[6]
+            //   }
+            //   rowFinished(err)
+            // })
           },
           function (err) {
             debug('build_default_result ERR %o %o', err, _groups)
@@ -367,13 +404,13 @@ module.exports = new Class({
   //   let _groups = {}
   //   // let groups = []
   //
-  //   let _path_query = query.distinct({index: 'path'}).coerceTo('array')
+  //   let _index_query = query.distinct({index: 'path'}).coerceTo('array')
   //
   //   let self = this
   //
   //   if(!callback){
   //     return new Promise(function(resolve, reject) {
-  //       _path_query.run(self.conn, {arrayLimit: 1000000}, function(err, paths){
+  //       _index_query.run(self.conn, {arrayLimit: 1000000}, function(err, paths){
   //         debug('build_default_result PATHS %o %o', err, paths)
   //
   //         if(err) reject(err)
@@ -456,7 +493,7 @@ module.exports = new Class({
   //     })
   //   }
   //   else {
-  //     _path_query.run(this.conn, {arrayLimit: 1000000}, function(err, paths){
+  //     _index_query.run(this.conn, {arrayLimit: 1000000}, function(err, paths){
   //       debug('build_default_result PATHS %o %o', err, paths)
   //
   //       if(err) callback(err, Object.values(_groups))
@@ -580,10 +617,21 @@ module.exports = new Class({
   //   _types_query.run(this.conn, {arrayLimit: 1000000}, callback)
   // },
   // build_default_result_between: function(doc){
-  build_default_result: function(doc){
+  get_group: function(group){
+    if(!group) return this.r.row('metadata')('path')
+
+    return this.r.row('metadata')(group)
+  },
+  get_distinct: function(distinct){
+    if(!distinct) return {index: 'path'}
+
+    return {index: distinct}
+  },
+  build_default_result: function(doc, index){
+    index = index || 'path'
     let self = this
-    return {
-      path: doc('group'),
+    let result = {
+      // path: doc('group'),
       count: doc('reduction').count(),
       hosts: doc('reduction').filter(function (doc) {
         return doc('metadata').hasFields('host');
@@ -615,8 +663,19 @@ module.exports = new Class({
               return set('metadata')('timestamp')
           }
         )('metadata')('timestamp'),
-      ]
+      ],
+      paths: doc('reduction').filter(function (doc) {
+        return doc('metadata').hasFields('path');
+      }).map(function(doc) {
+        return self.r.object(doc('metadata')('path'), true) // return { <country>: true}
+      }).reduce(function(left, right) {
+          return left.merge(right)
+      }).default({}).keys(),
     }
+
+    result['index_type'] = index
+    result[index] = doc('group')
+    return result
   },
   build_default_query_result: function(doc, query){
     debug_internals('build_default_query_result %o', query)
