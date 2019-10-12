@@ -302,46 +302,51 @@ module.exports = new Class({
     if(!callback){
       return new Promise(function(resolve, reject) {
         _index_query.run(this.conn, {arrayLimit: 1000000}, function(err, indexes){
-          if(err) reject(err)
+          if(err){
+             reject(err)
+           }
+           else{
+             indexes.eachAsync(
+               function (index, rowFinished) {
+                 _indexes_async(_groups, index, distinct, rowFinished)
+                 // if(!_groups[index]) _groups[index] = {}
+                 // _groups[index].index = index
+                 //
+                 // self.r.expr([
+                 //   query.getAll(index, distinct).count(),
+                 //   query.getAll(index, distinct)('metadata')('host').distinct(),
+                 //   query.getAll(index, distinct)('metadata')('tag').distinct(),
+                 //   query.getAll(index, distinct)('metadata')('type').distinct(),
+                 //   query.getAll(index, distinct)('metadata')('timestamp').min(),
+                 //   query.getAll(index, distinct)('metadata')('timestamp').max()
+                 // ]).run(self.conn, {arrayLimit: 1000000}, function(err, resp){
+                 //   // debug('EXPR RESULT %o %o', err, resp)
+                 //   _groups[index].tags = []
+                 //   resp[2].each(function(item){_groups[index].tags.combine(item)})
+                 //
+                 //   _groups[index].count = resp[0]
+                 //   _groups[index].hosts = resp[1]
+                 //   _groups[index].types = resp[3]
+                 //   _groups[index].range =[ resp[4],  resp[5] ]
+                 //
+                 //   rowFinished(err)
+                 // })
+               },
+               function (err) {
+                 debug('build_default_result ERR %o', err)
+                 if(err){
+                   reject(err)
+                 }
+                 else{
+                   let data = (Object.values(_groups).length > 0 ) ? Object.values(_groups) : []
+                   resolve(data)
+                 }
 
-          indexes.eachAsync(
-            function (index, rowFinished) {
-              _indexes_async(_groups, index, distinct, rowFinished)
-              // if(!_groups[index]) _groups[index] = {}
-              // _groups[index].index = index
-              //
-              // self.r.expr([
-              //   query.getAll(index, distinct).count(),
-              //   query.getAll(index, distinct)('metadata')('host').distinct(),
-              //   query.getAll(index, distinct)('metadata')('tag').distinct(),
-              //   query.getAll(index, distinct)('metadata')('type').distinct(),
-              //   query.getAll(index, distinct)('metadata')('timestamp').min(),
-              //   query.getAll(index, distinct)('metadata')('timestamp').max()
-              // ]).run(self.conn, {arrayLimit: 1000000}, function(err, resp){
-              //   // debug('EXPR RESULT %o %o', err, resp)
-              //   _groups[index].tags = []
-              //   resp[2].each(function(item){_groups[index].tags.combine(item)})
-              //
-              //   _groups[index].count = resp[0]
-              //   _groups[index].hosts = resp[1]
-              //   _groups[index].types = resp[3]
-              //   _groups[index].range =[ resp[4],  resp[5] ]
-              //
-              //   rowFinished(err)
-              // })
-            },
-            function (err) {
-              debug('build_default_result ERR %o', err)
-              if(err){
-                reject(err)
-              }
-              else{
-                let data = (Object.values(_groups).length > 0 ) ? Object.values(_groups) : []
-                resolve(data)
-              }
+               }
+             )
+           }
 
-            }
-          )
+
 
 
 
@@ -350,46 +355,48 @@ module.exports = new Class({
     }
     else{
       _index_query.run(this.conn, {arrayLimit: 1000000}, function(err, indexes){
-        if(err) callback(err, Object.values(_groups))
+        if(err){
+         callback(err, Object.values(_groups))
+       }
+       else{
+         indexes.eachAsync(
+           function (index, rowFinished) {
+             _indexes_async(_groups, index, distinct, rowFinished)
 
-        indexes.eachAsync(
-          function (index, rowFinished) {
-            _indexes_async(_groups, index, distinct, rowFinished)
-
-            // if(!_groups[index]) _groups[index] = {}
-            // _groups[index].index = index
-            // _groups[index].index_type = distinct.index
-            //
-            // self.r.expr([
-            //   query.getAll(index, distinct).count(),
-            //   query.getAll(index, distinct)('metadata')('host').distinct(),
-            //   query.getAll(index, distinct)('metadata')('tag').distinct(),
-            //   query.getAll(index, distinct)('metadata')('type').distinct(),
-            //   query.getAll(index, distinct)('metadata')('timestamp').min(),
-            //   query.getAll(index, distinct)('metadata')('timestamp').max(),
-            //   query.getAll(index, distinct)('metadata')('path').distinct(),
-            // ]).run(self.conn, {arrayLimit: 1000000}, function(err, resp){
-            //   // debug('EXPR RESULT %o %o', err, resp)
-            //   if(resp && Array.isArray(resp)){
-            //     _groups[index].tags = []
-            //     resp[2].each(function(item){_groups[index].tags.combine(item)})
-            //
-            //     _groups[index].count = resp[0]
-            //     _groups[index].hosts = resp[1]
-            //     _groups[index].types = resp[3]
-            //     _groups[index].range =[ resp[4],  resp[5] ]
-            //     _groups[index].paths = resp[6]
-            //   }
-            //   rowFinished(err)
-            // })
-          },
-          function (err) {
-            debug('build_default_result ERR %o %o', err, _groups)
-            let data = (Object.values(_groups).length > 0 ) ? Object.values(_groups) : []
-            callback(err, data)
-          }
-        )
-
+             // if(!_groups[index]) _groups[index] = {}
+             // _groups[index].index = index
+             // _groups[index].index_type = distinct.index
+             //
+             // self.r.expr([
+             //   query.getAll(index, distinct).count(),
+             //   query.getAll(index, distinct)('metadata')('host').distinct(),
+             //   query.getAll(index, distinct)('metadata')('tag').distinct(),
+             //   query.getAll(index, distinct)('metadata')('type').distinct(),
+             //   query.getAll(index, distinct)('metadata')('timestamp').min(),
+             //   query.getAll(index, distinct)('metadata')('timestamp').max(),
+             //   query.getAll(index, distinct)('metadata')('path').distinct(),
+             // ]).run(self.conn, {arrayLimit: 1000000}, function(err, resp){
+             //   // debug('EXPR RESULT %o %o', err, resp)
+             //   if(resp && Array.isArray(resp)){
+             //     _groups[index].tags = []
+             //     resp[2].each(function(item){_groups[index].tags.combine(item)})
+             //
+             //     _groups[index].count = resp[0]
+             //     _groups[index].hosts = resp[1]
+             //     _groups[index].types = resp[3]
+             //     _groups[index].range =[ resp[4],  resp[5] ]
+             //     _groups[index].paths = resp[6]
+             //   }
+             //   rowFinished(err)
+             // })
+           },
+           function (err) {
+             debug('build_default_result ERR %o %o', err, _groups)
+             let data = (Object.values(_groups).length > 0 ) ? Object.values(_groups) : []
+             callback(err, data)
+           }
+         )
+       }
 
 
       })
