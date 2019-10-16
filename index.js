@@ -211,7 +211,7 @@ module.exports = new Class({
         _query_aggregation_value = _query_aggregation_value[0]
       }
 
-      if(_query_aggregation_value && _query_aggregation === 'contains')
+      if(_query_aggregation_value)
         query = query
         .map(
           function (doc) {
@@ -241,7 +241,7 @@ module.exports = new Class({
           break;
 
         case 'distinct':
-          query = query.distinct(_query_aggregation_value)
+          query = query.distinct()
           break;
 
         case 'contains':
