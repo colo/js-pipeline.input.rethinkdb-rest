@@ -780,45 +780,54 @@ module.exports = new Class({
     delete metadata.type
     delete metadata.id
 
-    if(err){
-      debug_internals('process_default err', err)
-				this.fireEvent('onGetError', err);
+    let __response = function(err, resp){
+      if(err){
+        debug_internals('process_default err', err)
+  				this.fireEvent('onGetError', err);
 
-			this.fireEvent(
-				this[
-					'ON_'+this.options.requests.current.type.toUpperCase()+'_DOC_ERROR'
-				],
-				[err, {id: id, metadata : metadata}]
-			);
-    }
-
-    if(!err && Array.isArray(resp) && resp.length === 0)
-      err = {
-        status: 404,
-        message: 'Not Found'
+  			this.fireEvent(
+  				this[
+  					'ON_'+this.options.requests.current.type.toUpperCase()+'_DOC_ERROR'
+  				],
+  				[err, {id: id, metadata : metadata}]
+  			);
       }
 
-    // if(Array.isArray(resp))
-    //   debug_internals('ARRAY RESP', resp)
+      if(!err && Array.isArray(resp) && resp.length === 0)
+        err = {
+          status: 404,
+          message: 'Not Found'
+        }
 
-    // extras[type] = (Array.isArray(resp)) ? resp[0] : resp
-    // let data = (Array.isArray(resp) && metadata.changes !== true) ? resp[0] : resp
-    let data = resp
+      // if(Array.isArray(resp))
+      //   debug_internals('ARRAY RESP', resp)
 
-    delete metadata.prop
-    delete metadata.type
+      // extras[type] = (Array.isArray(resp)) ? resp[0] : resp
+      // let data = (Array.isArray(resp) && metadata.changes !== true) ? resp[0] : resp
+      let data = resp
+
+      delete metadata.prop
+      delete metadata.type
 
 
-    if(err){
-      this.fireEvent(this.ON_DOC_ERROR, [err, {id: id, metadata : metadata}]);
+      if(err){
+        this.fireEvent(this.ON_DOC_ERROR, [err, {id: id, metadata : metadata}]);
 
-      if(error_on_doc)
-        this.fireEvent(this.ON_DOC, [{err, id: id, metadata : metadata}, Object.merge({input_type: this, app: null})]);
+        if(error_on_doc)
+          this.fireEvent(this.ON_DOC, [{err, id: id, metadata : metadata}, Object.merge({input_type: this, app: null})]);
 
+      }
+      else{
+
+        this.fireEvent(this.ON_DOC, [{id: id,data: data, metadata : metadata}, Object.merge({input_type: this, app: null})]);
+      }
+    }.bind(this)
+
+    if(typeof resp.next === 'function'){//cursor
+      resp.toArray(__response)
     }
     else{
-
-      this.fireEvent(this.ON_DOC, [{id: id,data: data, metadata : metadata}, Object.merge({input_type: this, app: null})]);
+      __response(err, resp)
     }
 
 
