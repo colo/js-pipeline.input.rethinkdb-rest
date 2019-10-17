@@ -1004,12 +1004,17 @@ module.exports = new Class({
               if(row.type == 'add'){
 
                 let id = ( row.new_val && row.new_val.id ) ? row.new_val.id : uuidv5(JSON.stringify(row), this.ID)
-                this.changes_buffer[uuid].resp[id] = row.new_val
+                // if(this.changes_buffer[uuid] === undefined){
+                //   debug('ERROR %o %s', this.changes_buffer, uuid)
+                //   process.exit(1)
+                // }
+                if(this.changes_buffer[uuid] && this.changes_buffer[uuid].resp)
+                  this.changes_buffer[uuid].resp[id] = row.new_val
 
               }
 
               if(this.changes_buffer_expire[uuid] < Date.now() - 1001 && Object.getLength(this.changes_buffer[uuid].resp) > 0){
-                console.log('onPeriodicalDoc', this.changes_buffer[uuid].params, uuid)
+                // console.log('onPeriodicalDoc', this.changes_buffer[uuid].params, uuid)
 
                 // this.__process_changes(this.changes_buffer[uuid])
                 // params._extras.changes = true
