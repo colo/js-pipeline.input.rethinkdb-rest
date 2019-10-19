@@ -823,7 +823,7 @@ module.exports = new Class({
       }
     }.bind(this)
 
-    if(typeof resp.next === 'function'){//cursor
+    if(resp && resp.next && typeof resp.next === 'function'){//cursor
       resp.toArray(__response)
     }
     else{
