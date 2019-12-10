@@ -773,7 +773,7 @@ module.exports = new Class({
     let metadata = params._extras
     metadata.timestamp = Date.now()
     // let type = metadata.type
-    let id = metadata.id
+    let id = (Array.isArray(metadata.id)) ? metadata.id : [metadata.id]
     // let transformation = metadata.transformation
     // let aggregation = metadata.aggregation
 
@@ -781,46 +781,50 @@ module.exports = new Class({
     delete metadata.id
 
     let __response = function(err, resp){
-      if(err){
-        debug_internals('process_default err', err)
-  				this.fireEvent('onGetError', err);
+      Array.each(id, function(_id){
+        if(err){
+          debug_internals('process_default err', err)
+    				this.fireEvent('onGetError', err);
 
-  			this.fireEvent(
-  				this[
-  					'ON_'+this.options.requests.current.type.toUpperCase()+'_DOC_ERROR'
-  				],
-  				[err, {id: id, metadata : metadata}]
-  			);
-      }
-
-      if(!err && Array.isArray(resp) && resp.length === 0)
-        err = {
-          status: 404,
-          message: 'Not Found'
+    			this.fireEvent(
+    				this[
+    					'ON_'+this.options.requests.current.type.toUpperCase()+'_DOC_ERROR'
+    				],
+    				[err, {id: _id, metadata : metadata}]
+    			);
         }
 
-      // if(Array.isArray(resp))
-      //   debug_internals('ARRAY RESP', resp)
+        if(!err && Array.isArray(resp) && resp.length === 0)
+          err = {
+            status: 404,
+            message: 'Not Found'
+          }
 
-      // extras[type] = (Array.isArray(resp)) ? resp[0] : resp
-      // let data = (Array.isArray(resp) && metadata.changes !== true) ? resp[0] : resp
-      let data = resp
+        // if(Array.isArray(resp))
+        //   debug_internals('ARRAY RESP', resp)
 
-      delete metadata.prop
-      delete metadata.type
+        // extras[type] = (Array.isArray(resp)) ? resp[0] : resp
+        // let data = (Array.isArray(resp) && metadata.changes !== true) ? resp[0] : resp
+        let data = resp
+
+        delete metadata.prop
+        delete metadata.type
 
 
-      if(err){
-        this.fireEvent(this.ON_DOC_ERROR, [err, {id: id, metadata : metadata}]);
+        if(err){
+          this.fireEvent(this.ON_DOC_ERROR, [err, {id: _id, metadata : metadata}]);
 
-        if(error_on_doc)
-          this.fireEvent(this.ON_DOC, [{err, id: id, metadata : metadata}, Object.merge({input_type: this, app: null})]);
+          if(error_on_doc)
+            this.fireEvent(this.ON_DOC, [{err, id: _id, metadata : metadata}, Object.merge({input_type: this, app: null})]);
 
-      }
-      else{
+        }
+        else{
 
-        this.fireEvent(this.ON_DOC, [{id: id,data: data, metadata : metadata}, Object.merge({input_type: this, app: null})]);
-      }
+          this.fireEvent(this.ON_DOC, [{id: _id,data: data, metadata : metadata}, Object.merge({input_type: this, app: null})]);
+        }
+
+      }.bind(this))
+
     }.bind(this)
 
     if(resp && resp.next && typeof resp.next === 'function'){//cursor
@@ -943,13 +947,15 @@ module.exports = new Class({
 
     let uuid = uuidv5(JSON.stringify(req), this.ID)
 
-    debug_internals('register uuid %s', uuid)
+    debug_internals('register uuid %s %s', uuid, id)
+
 
     // if(!this.registered[uuid]) this.registered[uuid] = query
     if(!this.registered_ids[uuid]) this.registered_ids[uuid] = []
     this.registered_ids[uuid].combine([id])
 
     debug_internals('register uuidS %O', this.registered_ids)
+    // process.exit(1)
 
     // if(!this.registered[host][prop]) this.registered[host][prop] = []
     // this.registered[host][prop].push(id)
@@ -1019,7 +1025,11 @@ module.exports = new Class({
                 // this.__process_changes(this.changes_buffer[uuid])
                 // params._extras.changes = true
                 // this.process_default(err, this.changes_buffer[uuid].resp, this.changes_buffer[uuid].params)
-                this.process_default(err, Object.values(this.changes_buffer[uuid].resp), this.changes_buffer[uuid].params)
+                this.process_default(
+                  err,
+                  Object.values(this.changes_buffer[uuid].resp),
+                  Object.merge(Object.clone(this.changes_buffer[uuid].params), { _extras: {id: this.registered_ids[uuid]}})
+                )
 
                 // debug_internals('changes %s', new Date(), this.changes_buffer[uuid])
 
@@ -1041,6 +1051,34 @@ module.exports = new Class({
       }.bind(this))
 
     }
+    // // else if(this.feeds[uuid]){
+    // //   debug('this.feeds %o %s', this.changes_buffer[uuid], id)
+    // //   process.exit(1)
+    // // }
+    // else if(req.query.register === 'changes' && this.changes_buffer[uuid] && this.changes_buffer[uuid].params){
+    //   if(
+    //     this.changes_buffer[uuid].params.id
+    //     && Array.isArray(this.changes_buffer[uuid].params.id)
+    //     && !this.changes_buffer[uuid].params.id.contains(id)
+    //   ){
+    //     this.changes_buffer[uuid].params.id.push(id)
+    //   }
+    //   else if(
+    //     this.changes_buffer[uuid].params.id
+    //     && !Array.isArray(this.changes_buffer[uuid].params.id)
+    //     && this.changes_buffer[uuid].params.id !== id
+    //   ){
+    //     let _id = [this.changes_buffer[uuid].params.id, id]
+    //     this.changes_buffer[uuid].params.id = _id
+    //   }
+    //   else if(!this.changes_buffer[uuid].params.id) {//this should never happen
+    //     throw new Error({msg: 'this.changes_buffer['+uudi+'].params.id shouldn\'t be empty'})
+    //     this.changes_buffer[uuid].params.id = id
+    //   }
+    //
+    //   debug('this.feeds %o %s', this.changes_buffer[uuid], id)
+    //   process.exit(1)
+    // }
 
 
   },
