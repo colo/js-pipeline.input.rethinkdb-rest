@@ -34,7 +34,7 @@ module.exports = new Class({
     db: undefined,
     table: undefined,
     type: undefined,
-
+    changes: {maxBatchSeconds: 1, includeTypes: true},
 		requests : {
       once: [
 
@@ -983,7 +983,7 @@ module.exports = new Class({
 
 
       query
-        .run(this.conn, {maxBatchSeconds: 1, includeTypes: true}, function(err, cursor) {
+        .run(this.conn, this.options.changes, function(err, cursor) {
 
         debug_internals('registered %o %o', err, cursor)
         if(err){
@@ -1019,7 +1019,11 @@ module.exports = new Class({
 
               }
 
-              if(this.changes_buffer_expire[uuid] < Date.now() - 1001 && Object.getLength(this.changes_buffer[uuid].resp) > 0){
+              /**
+              * removed 'buffer expire' check, rethinkdb has it's own buffer
+              **/
+              // if(this.changes_buffer_expire[uuid] < Date.now() - 1001 && Object.getLength(this.changes_buffer[uuid].resp) > 0){
+              if(this.changes_buffer[uuid] && Object.getLength(this.changes_buffer[uuid].resp) > 0){
                 // console.log('onPeriodicalDoc', this.changes_buffer[uuid].params, uuid)
 
                 // this.__process_changes(this.changes_buffer[uuid])
