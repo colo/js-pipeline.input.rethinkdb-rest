@@ -1007,7 +1007,7 @@ module.exports = new Class({
 
             // debug_internals('changes %s', new Date())
             if(row && row !== null ){
-              if(row.type == 'add'){
+              if(row.type == 'add' || row.type == 'change'){
 
                 let id = ( row.new_val && row.new_val.id ) ? row.new_val.id : uuidv5(JSON.stringify(row), this.ID)
                 // if(this.changes_buffer[uuid] === undefined){
