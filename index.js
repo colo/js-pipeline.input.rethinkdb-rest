@@ -84,8 +84,14 @@ module.exports = new Class({
       if(typeof filter === 'string'){
         // _query_filter = filter.split(':')[0]
         // _query_filter_value = filter.split(':').slice(1)
-        debug('query_with_filter STRING', filter, eval("this."+filter))
-        query = query.filter(eval("this."+filter))
+        debug('query_with_filter STRING', filter)
+        // query = query.filter(eval("this."+filter))
+        if(filter.indexOf('this.r.row') > -1){
+          query = query.filter(eval(filter))
+        }
+        else{
+          query = query.filter(eval("this."+filter))
+        }
         debug('query_with_filter STRING', filter, query)
       }
       else if(Array.isArray(filter)){//allow chaining filters
