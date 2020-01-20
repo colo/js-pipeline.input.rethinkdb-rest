@@ -1,5 +1,5 @@
 {
-  "name": "js-pipeline.inputs.rethinkdb-rest",
+  "name": "js-pipeline.input.rethinkdb-rest",
   "version": "0.0.1",
   "private": true,
   "config": {
