@@ -2,8 +2,8 @@
 
 const App = require ( 'node-app-rethinkdb-client/index' )
 
-let debug = require('debug')('js-pipeline.inputs.rethinkdb-rest'),
-    debug_internals = require('debug')('js-pipeline.inputs.rethinkdb-rest:Internals');
+let debug = require('debug')('js-pipeline.input.rethinkdb-rest'),
+    debug_internals = require('debug')('js-pipeline.input.rethinkdb-rest:Internals');
 
 
 const roundMilliseconds = function(timestamp){
@@ -69,12 +69,12 @@ module.exports = new Class({
 
   	this.parent(options);//override default options
 
-		this.profile('js-pipeline.inputs.rethinkdb-rest_init');//start profiling
+		this.profile('js-pipeline.input.rethinkdb-rest_init');//start profiling
 
 
-		this.profile('js-pipeline.inputs.rethinkdb-rest_init');//end profiling
+		this.profile('js-pipeline.input.rethinkdb-rest_init');//end profiling
 
-		this.log('js-pipeline.inputs.rethinkdb-rest', 'info', 'js-pipeline.inputs.rethinkdb-rest started');
+		this.log('js-pipeline.input.rethinkdb-rest', 'info', 'js-pipeline.input.rethinkdb-rest started');
   },
   query_with_filter: function(query, filter){
 
