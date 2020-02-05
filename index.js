@@ -1038,7 +1038,7 @@ module.exports = new Class({
                 this.process_default(
                   err,
                   Object.values(this.changes_buffer[uuid].resp),
-                  Object.merge(Object.clone(this.changes_buffer[uuid].params), { _extras: {id: this.registered_ids[uuid]}})
+                  Object.merge(Object.clone(this.changes_buffer[uuid].params), { _extras: {id: this.registered_ids[uuid], timestamp: Date.now()}})
                 )
 
                 // debug_internals('changes %s', new Date(), this.changes_buffer[uuid])
