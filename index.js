@@ -263,7 +263,7 @@ module.exports = new Class({
   /**
   * creates more load on server
   **/
-  build_default_result_distinct: function(query, distinct, callback){
+  build_default_result_distinct: function(query, distinct, append_or_replace_distinct, callback){
     debug('build_default_result %o', query, distinct)
     // process.exit(1)
 
@@ -276,12 +276,13 @@ module.exports = new Class({
     let self = this
 
     let _indexes_async = function(_groups, index, distinct, rowFinished){
+
       if(!_groups[index]) _groups[index] = {}
       // _groups[index].index = index
       _groups[index].index_type = distinct.index
       _groups[index][distinct.index] = index
 
-      self.r.expr([
+      let _expr = [
         query.getAll(index, distinct).count(),
         query.getAll(index, distinct)('metadata')('host').distinct(),
         query.getAll(index, distinct)('metadata')('tag').distinct(),
@@ -289,17 +290,56 @@ module.exports = new Class({
         query.getAll(index, distinct)('metadata')('timestamp').min(),
         query.getAll(index, distinct)('metadata')('timestamp').max(),
         query.getAll(index, distinct)('metadata')('path').distinct(),
-      ]).run(self.conn, {arrayLimit: 1000000}, function(err, resp){
+      ]
+
+      if(append_or_replace_distinct){
+        let distinct_expr = []
+        Object.each(append_or_replace_distinct, function(column){
+          distinct_expr.push(eval(`query.getAll(index, distinct)${column}.distinct()`))
+        })
+
+        if(append_or_replace_distinct.replace === true){
+          _expr = distinct_expr
+        }
+        else {
+          _expr.combine(distinct_expr)
+        }
+
+        debug('build_default_result %o', distinct_expr)
+        // process.exit(1)
+      }
+
+
+
+      self.r.expr(_expr).run(self.conn, {arrayLimit: 1000000}, function(err, resp){
         // debug('EXPR RESULT %o %o', err, resp)
         if(resp && Array.isArray(resp)){
-          _groups[index].tags = []
-          resp[2].each(function(item){_groups[index].tags.combine(item)})
+          if(append_or_replace_distinct && append_or_replace_distinct.replace === true){
+            let resp_index = 0
+            Object.each(append_or_replace_distinct, function(column, prop){
+              _groups[index][prop] = resp[resp_index]
+              resp_index++
+            })
+          }
+          else {
+            _groups[index].tags = []
+            resp[2].each(function(item){_groups[index].tags.combine(item)})
 
-          _groups[index].count = resp[0]
-          _groups[index].hosts = resp[1]
-          _groups[index].types = resp[3]
-          _groups[index].range =[ resp[4],  resp[5] ]
-          _groups[index].paths = resp[6]
+            _groups[index].count = resp[0]
+            _groups[index].hosts = resp[1]
+            _groups[index].types = resp[3]
+            _groups[index].range =[ resp[4],  resp[5] ]
+            _groups[index].paths = resp[6]
+
+            if(append_or_replace_distinct){
+              let resp_index = 7
+              Object.each(append_or_replace_distinct, function(column, prop){
+                _groups[index][prop] = resp[resp_index]
+                resp_index++
+              })
+            }
+          }
+
         }
         rowFinished(err)
       })
@@ -787,6 +827,7 @@ module.exports = new Class({
     delete metadata.id
 
     let __response = function(err, resp){
+
       Array.each(id, function(_id){
         if(err){
           debug_internals('process_default err', err)
@@ -825,7 +866,7 @@ module.exports = new Class({
 
         }
         else{
-
+          debug_internals('process_default resp', {id: _id,data: data, metadata : metadata})
           this.fireEvent(this.ON_DOC, [{id: _id,data: data, metadata : metadata}, Object.merge({input_type: this, app: null})]);
         }
 
