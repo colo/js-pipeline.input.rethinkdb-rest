@@ -264,6 +264,11 @@ module.exports = new Class({
   * creates more load on server
   **/
   build_default_result_distinct: function(query, distinct, append_or_replace_distinct, callback){
+    if(typeof append_or_replace_distinct === 'function'){
+      callback = append_or_replace_distinct
+      append_or_replace_distinct = undefined
+    }
+
     debug('build_default_result %o', query, distinct)
     // process.exit(1)
 
