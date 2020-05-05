@@ -35,7 +35,7 @@ module.exports = new Class({
     table: undefined,
     type: undefined,
     changes: {includeTypes: true},
-    run: {arrayLimit: 1000000} //maxBatchSeconds: 1,
+    run: {arrayLimit: 1000000}, //maxBatchSeconds: 1,
 		requests : {
       once: [
 
