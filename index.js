@@ -34,7 +34,8 @@ module.exports = new Class({
     db: undefined,
     table: undefined,
     type: undefined,
-    changes: {maxBatchSeconds: 1, includeTypes: true},
+    changes: {includeTypes: true},
+    run: {arrayLimit: 1000000} //maxBatchSeconds: 1,
 		requests : {
       once: [
 
@@ -316,7 +317,7 @@ module.exports = new Class({
 
 
 
-      self.r.expr(_expr).run(self.conn, {arrayLimit: 1000000}, function(err, resp){
+      self.r.expr(_expr).run(self.conn, this.options.run, function(err, resp){
         // debug('EXPR RESULT %o %o', err, resp)
         if(resp && Array.isArray(resp)){
           if(append_or_replace_distinct && append_or_replace_distinct.replace === true){
@@ -352,7 +353,7 @@ module.exports = new Class({
 
     if(!callback){
       return new Promise(function(resolve, reject) {
-        _index_query.run(this.conn, {arrayLimit: 1000000}, function(err, indexes){
+        _index_query.run(this.conn, this.options.run, function(err, indexes){
           if(err){
              reject(err)
            }
@@ -405,7 +406,7 @@ module.exports = new Class({
       })
     }
     else{
-      _index_query.run(this.conn, {arrayLimit: 1000000}, function(err, indexes){
+      _index_query.run(this.conn, this.options.run, function(err, indexes){
         if(err){
          callback(err, Object.values(_groups))
        }
@@ -1035,7 +1036,7 @@ module.exports = new Class({
 
 
       query
-        .run(this.conn, this.options.changes, function(err, cursor) {
+        .run(this.conn, this.options.run, function(err, cursor) {
 
         debug_internals('registered %o %o', err, cursor)
         if(err){
