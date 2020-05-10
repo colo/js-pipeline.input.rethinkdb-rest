@@ -87,8 +87,12 @@ module.exports = new Class({
         // _query_filter_value = filter.split(':').slice(1)
         debug('query_with_filter STRING', filter)
         // query = query.filter(eval("this."+filter))
-        if(filter.indexOf('this.r.row') > -1 || filter.indexOf('function') > -1){
+        if(filter.indexOf('this.r.row') > -1){
           query = query.filter(eval(filter))
+        }
+        else if(filter.indexOf('function:') > -1){
+          filter = filter.replace('function:', '')
+          query = query.filter(function(row) {eval(filter)})
         }
         else{
           query = query.filter(eval("this."+filter))
