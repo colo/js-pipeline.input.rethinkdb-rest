@@ -92,7 +92,7 @@ module.exports = new Class({
         }
         else if(filter.indexOf('function:') > -1){
           filter = filter.replace('function:', '')
-          query = query.filter(function(row) {eval(filter)})
+          query = query.filter(function(row) { return eval(filter) }.bind(this))
         }
         else{
           query = query.filter(eval("this."+filter))
