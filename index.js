@@ -321,7 +321,7 @@ module.exports = new Class({
 
 
 
-      self.r.expr(_expr).run(self.conn, this.options.run, function(err, resp){
+      self.r.expr(_expr).run(self.conn, self.options.run, function(err, resp){
         // debug('EXPR RESULT %o %o', err, resp)
         if(resp && Array.isArray(resp)){
           if(append_or_replace_distinct && append_or_replace_distinct.replace === true){
