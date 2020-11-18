@@ -1082,7 +1082,13 @@ module.exports = new Class({
 
               }
 
-              if(this.changes_buffer_expire[uuid] < Date.now() - this.options.changes_expire && Object.getLength(this.changes_buffer[uuid].resp) > 0){
+              if(
+                (
+                  this.options.changes_expire === 0
+                  || this.options.changes_expire === undefined
+                  || ( this.changes_buffer_expire[uuid] < Date.now() - this.options.changes_expire )
+                )
+                && Object.getLength(this.changes_buffer[uuid].resp) > 0){
               // if(this.changes_buffer[uuid] && Object.getLength(this.changes_buffer[uuid].resp) > 0){
                 // console.log('onPeriodicalDoc', this.changes_buffer[uuid].params, uuid)
 
