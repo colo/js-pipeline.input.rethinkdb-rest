@@ -29,7 +29,7 @@ module.exports = new Class({
 
   changes_buffer: {},
   changes_buffer_expire: {},
-  changes_buffer_expire_period: 1000, //ms
+
 
   periodicals: {},
 
@@ -38,6 +38,9 @@ module.exports = new Class({
     table: undefined,
     type: undefined,
     changes: {includeTypes: true},
+
+    changes_expire: 1000, //ms
+
     run: {arrayLimit: 1000000}, //maxBatchSeconds: 1,
 		requests : {
       once: [
@@ -1079,7 +1082,7 @@ module.exports = new Class({
 
               }
 
-              if(this.changes_buffer_expire[uuid] < Date.now() - this.changes_buffer_expire_period && Object.getLength(this.changes_buffer[uuid].resp) > 0){
+              if(this.changes_buffer_expire[uuid] < Date.now() - this.options.changes_expire && Object.getLength(this.changes_buffer[uuid].resp) > 0){
               // if(this.changes_buffer[uuid] && Object.getLength(this.changes_buffer[uuid].resp) > 0){
                 // console.log('onPeriodicalDoc', this.changes_buffer[uuid].params, uuid)
 
