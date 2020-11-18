@@ -26,8 +26,11 @@ module.exports = new Class({
   registered_ids: {},
   feeds: {},
   close_feeds: {},
+
   changes_buffer: {},
   changes_buffer_expire: {},
+  changes_buffer_expire_period: 1000, //ms
+
   periodicals: {},
 
   options: {
@@ -1076,11 +1079,8 @@ module.exports = new Class({
 
               }
 
-              /**
-              * removed 'buffer expire' check, rethinkdb has it's own buffer
-              **/
-              // if(this.changes_buffer_expire[uuid] < Date.now() - 1001 && Object.getLength(this.changes_buffer[uuid].resp) > 0){
-              if(this.changes_buffer[uuid] && Object.getLength(this.changes_buffer[uuid].resp) > 0){
+              if(this.changes_buffer_expire[uuid] < Date.now() - this.changes_buffer_expire_period && Object.getLength(this.changes_buffer[uuid].resp) > 0){
+              // if(this.changes_buffer[uuid] && Object.getLength(this.changes_buffer[uuid].resp) > 0){
                 // console.log('onPeriodicalDoc', this.changes_buffer[uuid].params, uuid)
 
                 // this.__process_changes(this.changes_buffer[uuid])
