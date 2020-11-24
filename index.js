@@ -823,7 +823,14 @@ module.exports = new Class({
     else{
       // _return_obj['docs'] = r_query.pluck(this.r.args(query.q))
       // _return_obj = r_query.pluck(this.r.args(query.q))
-      r_query = r_query.pluck(this.r.args(query.q))
+
+      /**
+      * possibly mem leak using args? or pluck?
+      * r_query = r_query.pluck(this.r.args(query.q))
+      **/
+      r_query = r_query.pluck(query.q)
+
+      debug('build_query_fields pluck %o', r_query)
     }
 
     return r_query
